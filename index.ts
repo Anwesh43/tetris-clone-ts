@@ -363,6 +363,26 @@ class SquareBlock extends MovingBlock {
     }
 }
 
+class NBlock extends MovingBlock {
+
+    defineBlock() {
+        super.defineBlock()
+        const down = this.curr.addDown()
+        const rightDown = down.addRight()
+        const downRight = rightDown.addDown()
+        this.downMost = downRight  
+        this.curr.setFilledRecurv()
+    }
+}
+
+class LineBlock extends MovingBlock {
+    defineBlock() {
+        super.defineBlock()
+        this.curr.addRight().addRight().addRight()
+        this.downMost = this.curr 
+        this.curr.setFilledRecurv()
+    }
+}
 class StaticGrid {
 
     blocks : Array<GridBlock> = []
@@ -385,7 +405,15 @@ class MovingBlockController {
     static i : number = 0
     static colors : Array<string> = ["cyan", "teal", "green"]
     create() {
-        this.curr = new SquareBlock()
+        if (MovingBlockController.i % 3 == 0) {
+            this.curr = new SquareBlock()
+        }
+        if (MovingBlockController.i % 3 == 1) {
+            this.curr = new NBlock()
+        }
+        if (MovingBlockController.i % 3 == 2) {
+            this.curr = new LineBlock()
+        }
         this.curr.setColor(MovingBlockController.colors[MovingBlockController.i % 3])
         MovingBlockController.i++
     }
