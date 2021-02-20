@@ -191,24 +191,29 @@ class GridBlock {
             context.fillRect(this.x, this.y, gridSize, gridSize)
             context.strokeStyle = 'white'
             context.strokeRect(this.x, this.y, gridSize, gridSize)   
-        }
-        if (this.right) {
-            this.right.draw(context)
-        }
-        if (this.down) {
-            this.down.draw(context)
+            if (this.right) {
+                this.right.draw(context)
+            }
+            if (this.down) {
+                this.down.draw(context)
+            }
         }
     }
 
-    fillGrid() {
+    fillGrid(cb : Function) {
         const gridBlock : GridBlock = gridMap[createKey(this.x, this.y)]
         gridBlock.setFilled(true)
         gridBlock.setColor(this.color)
+        cb(gridBlock)
         if (this.right) {
-            this.right.fillGrid()
+            this.right.fillGrid(() => {
+
+            })
         }
         if (this.down) {
-            this.down.fillGrid()
+            this.down.fillGrid(() => {
+
+            })
         }
     }
 }
@@ -264,8 +269,8 @@ class MovingBlock {
         return  true
     }
 
-    addToGrid() {
-        this.curr.fillGrid()
+    addToGrid(cb : Function) {
+        this.curr.fillGrid(cb)
     }
 }
 
@@ -282,6 +287,22 @@ class SquareBlock extends MovingBlock {
     }
 }
 
+class StaticGrid {
+
+    blocks : Array<GridBlock> = []
+
+    addGrid(grid : GridBlock) {
+        this.blocks.push(grid)
+    }
+
+    draw(context : CanvasRenderingContext2D) {
+        this.blocks.forEach((block) => {
+            block.draw(context)     
+        })
+    }
+
+}
+
 class MovingBlockController {
 
     curr : MovingBlock
@@ -293,12 +314,12 @@ class MovingBlockController {
         MovingBlockController.i++
     }
 
-    moveDown() {
+    moveDown(cb : Function) {
         console.log("CURR", this.curr)
         if (this.curr.shouldMove()) {
             this.curr.moveDown()
         } else {
-            this.curr.addToGrid()
+            this.curr.addToGrid(cb)
             this.create()
         }
     }
@@ -329,6 +350,7 @@ class GridRenderer {
 
     root : GridBlock = new GridBlock(0, 0, true)
     controller : MovingBlockController = new MovingBlockController()
+    staticGrid : StaticGrid = new StaticGrid()
 
     constructor() {
         this.controller.create()
@@ -337,7 +359,10 @@ class GridRenderer {
     render(context : CanvasRenderingContext2D) {
         this.root.draw(context)
         this.controller.draw(context)
-        this.controller.moveDown()
+        this.staticGrid.draw(context)
+        this.controller.moveDown((gb) => {
+            this.staticGrid.addGrid(gb)
+        })
     }
 
     handleMotion(e : number) {
