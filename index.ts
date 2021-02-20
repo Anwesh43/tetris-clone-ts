@@ -62,6 +62,27 @@ class Loop {
 const loop : Loop = new Loop()
 const gridMap : Record<string, GridBlock> = {}
 
+class State {
+
+    scale : number = 0 
+    dir : number = 0 
+    
+    update(cb : Function) {
+        this.scale += 0.25 * this.dir  
+        if (this.scale > 1) {
+            cb()
+            this.scale = 0 
+            this.dir = 0
+        }
+    }
+
+    startUpdating() {
+        if (this.dir == 0) {
+            this.dir = 1
+        }
+    }
+}
+
 class GridBlock {
 
     down : GridBlock
@@ -69,7 +90,7 @@ class GridBlock {
     filled : boolean = false
     color : string
     moved : boolean = false 
-
+    state : State = new State()
 
     setColor(color : string) {
         this.color = color
@@ -106,7 +127,45 @@ class GridBlock {
             this.down.filled = true 
             this.down.setFilledRecurv()
         }
-    } 
+    }
+    
+    drawStatic(context : CanvasRenderingContext2D) {
+        const scale = this.state.scale 
+        if (this.filled) {
+            context.strokeStyle = 'white'
+            context.strokeRect(
+                this.x + gridSize * 0.5 * scale,
+                this.y + gridSize * 0.5 * scale,
+                gridSize * (1 - scale), 
+                gridSize * (1 - scale)
+            )
+            context.fillStyle = this.color 
+            context.fillRect(
+                this.x + gridSize * 0.5 * scale,
+                this.y + gridSize * 0.5 * scale,
+                gridSize * (1 - scale), 
+                gridSize * (1 - scale)
+            )
+            if (this.right) {
+                this.right.drawStatic(context)
+            }
+            if (this.down) {
+                this.down.drawStatic(context)
+            }
+            this.update()
+        }
+    }
+
+    update() {
+        this.state.update(() => {
+            this.filled = false 
+            this.color = null 
+        })
+    }
+
+    start() {
+        this.state.startUpdating()
+    }
 
 
     constructor(private x : number, private y : number, inGrid: boolean) {
@@ -117,7 +176,7 @@ class GridBlock {
     }
 
     populateDown() {
-        console.log(this.x, this. y)
+        //console.log(this.x, this. y)
         if (this.x < w - gridSize) {
             if (!gridMap[createKey(this.x + gridSize, this.y)]) {
                 this.right = new GridBlock(this.x + gridSize, this.y, true)
@@ -143,7 +202,7 @@ class GridBlock {
         //console.log("DOWN_gRID", downGrid)
         const downFilled =  !downGrid.down || downGrid.down.filled
         if (downFilled) {
-            console.log("DOWN_FILLED", downGrid)
+            //console.log("DOWN_FILLED", downGrid)
         }
         return downFilled
     }
@@ -151,7 +210,7 @@ class GridBlock {
     moveDown() {
         if (this.y < h - gridSize) {
             this.y += gridSize
-            console.log("Y", this.y)
+            //console.log("Y", this.y)
         }
         if (this.right && this.y > this.right.y) {
             this.right.moveDown()
@@ -259,7 +318,7 @@ class MovingBlock {
 
     shouldMove() {
         var curr = this.downMost
-        console.log("CURR_DOWN", curr.isDownFilled())
+        //console.log("CURR_DOWN", curr.isDownFilled())
         while (curr) {
             if (curr.isDownFilled()) {
                 return false
@@ -297,7 +356,7 @@ class StaticGrid {
 
     draw(context : CanvasRenderingContext2D) {
         this.blocks.forEach((block) => {
-            block.draw(context)     
+            block.drawStatic(context)    
         })
     }
 
@@ -315,7 +374,7 @@ class MovingBlockController {
     }
 
     moveDown(cb : Function) {
-        console.log("CURR", this.curr)
+        //console.log("CURR", this.curr)
         if (this.curr.shouldMove()) {
             this.curr.moveDown()
         } else {
@@ -351,22 +410,51 @@ class GridRenderer {
     root : GridBlock = new GridBlock(0, 0, true)
     controller : MovingBlockController = new MovingBlockController()
     staticGrid : StaticGrid = new StaticGrid()
-
+    ruleEngine : RuleEngine = new RuleEngine()
     constructor() {
         this.controller.create()
     }
 
     render(context : CanvasRenderingContext2D) {
-        this.root.draw(context)
+        //this.root.draw(context)
         this.controller.draw(context)
         this.staticGrid.draw(context)
         this.controller.moveDown((gb) => {
             this.staticGrid.addGrid(gb)
         })
+        this.ruleEngine.checkRow()
     }
 
     handleMotion(e : number) {
         this.controller.handleMotion(e)
+    }
+}
+
+class RuleEngine {
+
+    checkRow() {
+        let root = gridMap[createKey(0, 0)]
+        while (root != null) {
+            let curr = root
+            let allFilled = true;
+            while (curr != null) {
+                allFilled = allFilled && curr.filled
+                if (!allFilled) {
+                    break;
+                }
+                curr = curr.right 
+            } 
+            if (allFilled) {
+                let curr = root; 
+                console.log("ALL_FILLED", allFilled)
+                while (curr != null) {
+                    curr.start()
+                    curr = curr.right 
+                }
+            }
+            root = root.down 
+        }
+        return false;
     }
 }
 
