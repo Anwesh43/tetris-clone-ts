@@ -3,8 +3,9 @@ const h : number = Math.floor(window.innerHeight / 10) * 10
 const gridSize =  10 
 const backColor : string = "#BDBDBD"
 const delay : number = 50 
-const mid : number = Math.floor(w / (2 *gridSize))
+const mid : number = Math.floor(w / (2 * gridSize)) * gridSize 
 
+const createKey : Function = (x : number, y : number) : string => `${x}, ${y}`
 class Stage {
 
     context : CanvasRenderingContext2D
@@ -71,18 +72,38 @@ class GridBlock {
         this.color = color
     }
 
-
-    constructor(private x : number, private y : number) {
-        this.populateDown()
-        gridMap[`${x}, ${y}`]  = this
+    addRight() {
+        this.right = new GridBlock(this.x + gridSize, this.y, false)
+        return this.right 
     }
 
-    populateDown() {
+    addDown() {
+        this.down = new GridBlock(this.x + gridSize, this.y, false)
+        return this.down 
+    }
+
+
+    constructor(private x : number, private y : number, inGrid: boolean) {
+        this.populateDown(inGrid)
+        if (inGrid) {
+            gridMap[createKey(this.x, this.y)]  = this
+        }
+    }
+
+    populateDown(inGrid : boolean) {
         if (this.x < w - gridSize) {
-            this.right = new GridBlock(this.x + gridSize, this.y)
+            if (!gridMap[createKey(this.x + gridSize, this.y)]) {
+                this.right = new GridBlock(this.x + gridSize, this.y, true)
+            } else if (inGrid){
+                this.right = gridMap[createKey(this.x + gridSize, this.y)]
+            }
         }
         if (this.x < h - gridSize) {
-            this.down = new GridBlock(this.x, this.y + gridSize)
+            if (!gridMap[createKey(this.x, this.y + gridSize)]) {
+                this.down = new GridBlock(this.x, this.y + gridSize, true)
+            } else if (inGrid) {
+                this.down = gridMap[createKey(this.x, this.y + gridSize)]
+            }
         }
     }
 
@@ -98,14 +119,35 @@ class GridBlock {
         if (this.y < h - gridSize) {
             this.y += gridSize 
         }
+        if (this.right) {
+            this.right.moveDown()
+        }
+        if (this.down) {
+            this.down.moveDown()
+        }
     }
 
     moveLeft() {
         if (this.x >= gridSize) {
             this.x -= gridSize
         }
+        if (this.right) {
+            this.right.moveLeft()
+        }
+        if (this.down) {
+            this.down.moveDown()
+        }
+    }
+
+    moveRight() {
         if (this.x <= w - gridSize) {
-            this.x += gridSize 
+            this.x += gridSize
+        }
+        if (this.right) {
+            this.right.moveRight()
+        }
+        if (this.down) {
+            this.down.moveRight()
         }
     }
 
@@ -121,11 +163,75 @@ class GridBlock {
             }
         }
     }
+
+    fillGrid() {
+        gridMap[`${this.x}${this.y}`].setFilled(true)
+        if (this.right) {
+            this.right.fillGrid()
+        }
+        if (this.down) {
+            this.down.fillGrid()
+        }
+    }
 }
+
+class MovingBlock {
+
+    curr : GridBlock = new GridBlock(mid, 0, false)
+    downMost : GridBlock = this.curr 
+    defineBlock() {
+        this.curr.right = null 
+        this.curr.down = null 
+    }
+
+    draw(context : CanvasRenderingContext2D) {
+        this.curr.draw(context)
+    }
+
+    moveDown() {
+        this.curr.moveDown()
+    }
+
+    moveLeft() {
+        this.curr.moveLeft()
+    }
+    
+    moveRight() {
+        this.curr.moveRight()
+    }
+
+    shouldMove() {
+        var curr = this.downMost 
+        while (curr) {
+            if (curr.isDownFilled()) {
+                return false 
+            }
+            curr = this.downMost.right  
+        }
+        return  true 
+    }
+
+    addToGrid() {
+        this.curr.fillGrid()
+    }
+}
+
+class SquareBlock extends MovingBlock {
+
+    defineBlock() {
+        super.defineBlock()
+        const right = this.curr.addRight()
+        const down = this.curr.addDown()
+        const downRight = down.addRight()
+        right.down = downRight
+        this.downMost = down 
+    }    
+}
+
 
 class GridRenderer {
 
-    root : GridBlock = new GridBlock(0, 0)
+    root : GridBlock = new GridBlock(0, 0, true)
 
     render(context : CanvasRenderingContext2D) {
         this.root.draw(context)
