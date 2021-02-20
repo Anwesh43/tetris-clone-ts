@@ -10,6 +10,7 @@ class Stage {
 
     context : CanvasRenderingContext2D
     canvas : HTMLCanvasElement = document.createElement('canvas')
+    gridRenderer : GridRenderer = new GridRenderer()
 
     initCanvas() {
         this.canvas.width = w 
@@ -21,11 +22,12 @@ class Stage {
     render() {
         this.context.fillStyle = backColor 
         this.context.fillRect(0, 0, w, h)
+        this.gridRenderer.render(this.context)
     }
 
-    handleTap() {
-        this.canvas.onmousedown = () => {
-
+    handleKey() {
+        window.onkeydown = (e: KeyboardEvent) => {
+            this.gridRenderer.handleMotion(e.keyCode)
         }
     }
     
@@ -33,7 +35,7 @@ class Stage {
         const stage : Stage = new Stage()
         stage.initCanvas()
         stage.render()
-        stage.handleTap()
+        stage.handleKey()
     }
 }
 
@@ -291,3 +293,4 @@ class GridRenderer {
         this.controller.handleMotion(e)
     }
 }
+
