@@ -1,5 +1,5 @@
-const w : number = 600
-const h : number = 600
+const w : number = 400
+const h : number = 400
 const gridSize =  40
 const backColor : string = "#BDBDBD"
 const delay : number = 200
@@ -174,7 +174,7 @@ class GridBlock {
     }
 
     moveRight() {
-        if (this.x <= w - gridSize) {
+        if (this.x < w - gridSize) {
             this.x += gridSize
         }
         if (this.right && this.right.x === this.x) {
@@ -190,13 +190,13 @@ class GridBlock {
             context.fillStyle = this.color
             context.fillRect(this.x, this.y, gridSize, gridSize)
             context.strokeStyle = 'white'
-            context.strokeRect(this.x, this.y, gridSize, gridSize)
-            if (this.right) {
-                this.right.draw(context)
-            }
-            if (this.down) {
-                this.down.draw(context)
-            }
+            context.strokeRect(this.x, this.y, gridSize, gridSize)   
+        }
+        if (this.right) {
+            this.right.draw(context)
+        }
+        if (this.down) {
+            this.down.draw(context)
         }
     }
 
@@ -277,6 +277,7 @@ class SquareBlock extends MovingBlock {
         const down = this.curr.addDown()
         const downRight = down.addRight()
         right.down = downRight
+        this.downMost = down  
         this.curr.setFilledRecurv()
     }
 }
