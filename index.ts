@@ -179,9 +179,15 @@ class MovingBlock {
 
     curr : GridBlock = new GridBlock(mid, 0, false)
     downMost : GridBlock = this.curr 
+
+    setColor(color : string) {
+        this.curr.setColor(color)
+    }
+
     defineBlock() {
         this.curr.right = null 
         this.curr.down = null 
+        this.curr.setFilled(true)
     }
 
     draw(context : CanvasRenderingContext2D) {
@@ -228,12 +234,60 @@ class SquareBlock extends MovingBlock {
     }    
 }
 
+class MovingBlockController {
+
+    curr : MovingBlock 
+    static i : number = 0 
+    static colors : Array<string> = ["cyan", "teal", "green"]
+    create() {
+        this.curr = new SquareBlock()
+        this.curr.setColor(MovingBlockController.colors[MovingBlockController.i % 3])
+        MovingBlockController.i++
+    }
+
+    moveDown() {
+        if (this.curr.shouldMove()) {
+            this.curr.moveDown() 
+        } else {
+            this.curr.addToGrid()
+            this.create()
+        }
+    }
+
+    moveRight() {
+        this.curr.moveRight()
+    }
+
+    moveLeft() {
+        this.curr.moveLeft()
+    }
+
+    draw(context : CanvasRenderingContext2D) {
+        this.curr.draw(context)
+    }
+
+    handleMotion(e : number) {
+        if (e == 37) {
+            this.moveLeft()
+        } else if (e == 39) {
+            this.moveRight()
+        }
+    }
+}
+
 
 class GridRenderer {
 
     root : GridBlock = new GridBlock(0, 0, true)
+    controller : MovingBlockController = new MovingBlockController() 
 
     render(context : CanvasRenderingContext2D) {
         this.root.draw(context)
+        this.controller.draw(context)
+        this.controller.moveDown()
+    }
+
+    handleMotion(e : number) {
+        this.controller.handleMotion(e)
     }
 }
