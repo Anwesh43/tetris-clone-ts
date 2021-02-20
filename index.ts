@@ -3,7 +3,7 @@ const h : number = Math.floor(window.innerHeight / 10) * 10
 const gridSize =  10 
 const backColor : string = "#BDBDBD"
 const delay : number = 50 
-
+const mid : number = Math.floor(w / (2 *gridSize))
 
 class Stage {
 
@@ -57,6 +57,7 @@ class Loop {
 }
 
 const loop : Loop = new Loop()
+const gridMap : Record<string, GridBlock> = {}
 
 class GridBlock {
 
@@ -72,7 +73,8 @@ class GridBlock {
 
 
     constructor(private x : number, private y : number) {
-        this.populateDown() 
+        this.populateDown()
+        gridMap[`${x}, ${y}`]  = this
     }
 
     populateDown() {
@@ -111,6 +113,21 @@ class GridBlock {
         if (this.filled && this.color) {
             context.fillStyle = this.color 
             context.fillRect(this.x, this.y, gridSize, gridSize)
+            if (this.right) {
+                this.right.draw(context)
+            }
+            if (this.down) {
+                this.down.draw(context)
+            }
         }
+    }
+}
+
+class GridRenderer {
+
+    root : GridBlock = new GridBlock(0, 0)
+
+    render(context : CanvasRenderingContext2D) {
+        this.root.draw(context)
     }
 }
