@@ -70,9 +70,10 @@ class State {
     update(cb : Function) {
         this.scale += 0.25 * this.dir  
         if (this.scale > 1) {
-            cb()
-            this.scale = 0 
             this.dir = 0
+            this.scale = 0
+            cb()
+
         }
     }
 
@@ -156,10 +157,26 @@ class GridBlock {
         }
     }
 
+    setFilledIfUpIsFilled() {
+        let y = this.y 
+        while (y >= gridSize) {
+            const currGrid = gridMap[createKey(this.x, y)]
+            const upGrid : GridBlock = gridMap[createKey(this.x, y - gridSize)]
+            if (upGrid.filled) {
+                currGrid.filled = upGrid.filled 
+                currGrid.color = upGrid.color 
+                upGrid.color = null  
+                upGrid.filled = false 
+            }
+            y -= gridSize
+        }
+    }
+
     update() {
         this.state.update(() => {
             this.filled = false 
             this.color = null 
+            this.setFilledIfUpIsFilled()
         })
     }
 
@@ -433,14 +450,15 @@ class GridRenderer {
 class RuleEngine {
 
     checkRow() {
-        let root = gridMap[createKey(0, 0)]
+        let y : number = h - gridSize
+        let root = gridMap[createKey(0, y)]
         while (root != null) {
             let curr = root
             let allFilled = true;
             while (curr != null) {
                 allFilled = allFilled && curr.filled
                 if (!allFilled) {
-                    break;
+                    break
                 }
                 curr = curr.right 
             } 
@@ -451,10 +469,11 @@ class RuleEngine {
                     curr.start()
                     curr = curr.right 
                 }
+                break
             }
-            root = root.down 
+            y -= gridSize
+            root = gridMap[createKey(0, y)] 
         }
-        return false;
     }
 }
 
