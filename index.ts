@@ -31,11 +31,12 @@ class Stage {
         }
     }
     
-    static init() {
+    static init() : Stage {
         const stage : Stage = new Stage()
         stage.initCanvas()
-        stage.render()
+        
         stage.handleKey()
+        return stage
     }
 }
 
@@ -294,3 +295,8 @@ class GridRenderer {
     }
 }
 
+const stage : Stage = new Stage()
+
+loop.start(() => {
+    stage.render()
+})
