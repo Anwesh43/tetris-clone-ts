@@ -1,7 +1,9 @@
-const w : number = window.innerWidth 
-const h : number = window.innerHeight  
+const w : number = Math.floor(window.innerWidth / 10)  * 10 
+const h : number = Math.floor(window.innerHeight / 10) * 10  
+const gridSize =  10 
 const backColor : string = "#BDBDBD"
 const delay : number = 50 
+
 
 class Stage {
 
@@ -55,3 +57,31 @@ class Loop {
 }
 
 const loop : Loop = new Loop()
+
+class GridBlock {
+
+    down : GridBlock  
+    right : GridBlock 
+    filled : boolean = false 
+    
+    constructor(private x : number, private y : number) {
+        this.populateDown() 
+    }
+
+    populateDown() {
+        if (this.x < w - gridSize) {
+            this.right = new GridBlock(this.x + gridSize, this.y)
+        }
+        if (this.x < h - gridSize) {
+            this.right = new GridBlock(this.x, this.y + gridSize)
+        }
+    }
+
+    setFilled(filled : boolean) {
+        this.filled = filled 
+    }
+
+    isDownFilled() {
+        return (!this.down || (this.down && this.down.filled))
+    }
+}
