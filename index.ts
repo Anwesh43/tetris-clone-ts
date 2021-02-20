@@ -63,7 +63,14 @@ class GridBlock {
     down : GridBlock  
     right : GridBlock 
     filled : boolean = false 
-    
+    color : string 
+
+
+    setColor(color : string) {
+        this.color = color
+    }
+
+
     constructor(private x : number, private y : number) {
         this.populateDown() 
     }
@@ -73,7 +80,7 @@ class GridBlock {
             this.right = new GridBlock(this.x + gridSize, this.y)
         }
         if (this.x < h - gridSize) {
-            this.right = new GridBlock(this.x, this.y + gridSize)
+            this.down = new GridBlock(this.x, this.y + gridSize)
         }
     }
 
@@ -83,5 +90,27 @@ class GridBlock {
 
     isDownFilled() {
         return (!this.down || (this.down && this.down.filled))
+    }
+    
+    moveDown() {
+        if (this.y < h - gridSize) {
+            this.y += gridSize 
+        }
+    }
+
+    moveLeft() {
+        if (this.x >= gridSize) {
+            this.x -= gridSize
+        }
+        if (this.x <= w - gridSize) {
+            this.x += gridSize 
+        }
+    }
+
+    draw(context : CanvasRenderingContext2D) {
+        if (this.filled && this.color) {
+            context.fillStyle = this.color 
+            context.fillRect(this.x, this.y, gridSize, gridSize)
+        }
     }
 }
